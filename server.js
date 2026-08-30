@@ -5,7 +5,7 @@ app.use(express.json());
 let donasiTertunda = {};
 
 // SILAKAN GANTI PASSWORD INI JIKA MAU
-const KODE_RAHASIA = "SarangDosaEmas2026!";
+const KODE_RAHASIA = "TepiJurang2026";
 
 app.post('/webhook-saweria', (req, res) => {
     const namaDonatur = req.body.donator_name; 
