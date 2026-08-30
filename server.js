@@ -2,26 +2,32 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-let donasiTertunda = {};
+let donasiTertunda = {}; // Menyimpan data: { username: { amount, message } }
 
 const KODE_RAHASIA = "TepiJurang2026";
 
 // Rute penerima webhook dari bagibagi.co
 app.post('/webhook-bagibagi', (req, res) => {
     const data = req.body;
+    console.log("Data mentah dari bagibagi.co:", JSON.stringify(data));
     
-    // Menangkap data dari bagibagi.co (mencakup berbagai kemungkinan nama field)
-    const namaDonatur = data.supporter_name || data.name || data.username || "Anonim"; 
-    const nominal = Number(data.amount || data.nominal || data.raw_amount || 0);
+    const namaDonatur = data.name || data.supporter_name || data.username || "Anonim"; 
+    const pesanDonatur = data.message || "Mendukung tanpa pesan";
     
-    console.log("Data masuk dari bagibagi.co:", data);
+    let rawAmount = data.amount || data.nominal || data.raw_amount || 0;
+    if (typeof rawAmount === 'string') {
+        rawAmount = Number(rawAmount.replace(/[^0-9]/g, '')) || 0;
+    }
+    const nominal = Number(rawAmount);
 
     if (namaDonatur && nominal > 0) {
         if (!donasiTertunda[namaDonatur]) {
-            donasiTertunda[namaDonatur] = 0;
+            donasiTertunda[namaDonatur] = { amount: 0, message: pesanDonatur };
         }
-        donasiTertunda[namaDonatur] += nominal;
-        console.log(`[+] BERHASIL: ${namaDonatur} mendonasikan Rp${nominal}`);
+        donasiTertunda[namaDonatur].amount += nominal;
+        donasiTertunda[namaDonatur].message = pesanDonatur; // Simpan pesan terbaru
+        
+        console.log(`[+] BERHASIL: ${namaDonatur} mendonasikan Rp${nominal} | Pesan: "${pesanDonatur}"`);
     }
     
     res.status(200).json({ status: "ok" });
